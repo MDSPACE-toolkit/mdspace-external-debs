@@ -23,7 +23,11 @@ Depends:
  default-jre | java-runtime,
  libxml-parser-perl,
  libxml-sax-perl,
- perl
+ libxml-libxml-perl,
+ libxml-simple-perl,
+ pdl,
+ libxml-filter-buffertext-perl,
+ libfile-slurper-perl
 Description: SMOG2 molecular simulation toolkit
  SMOG2 is a tool for molecular simulation and analysis. This package
  integrates the SMOG2 toolkit into the MDSPACE environment.
