@@ -1,0 +1,8 @@
+usr/bin/
+usr/lib/
+usr/bindings/
+usr/resources/
+usr/pylib/
+usr/xmipp.bashrc
+usr/include/
+usr/share/

@@ -6,7 +6,10 @@
 override_dh_auto_configure:
 	./xmipp getSources
 	mkdir -p build
-	grep -q 'defined(__i386__)' src/xmipp/libraries/data/cpu.cpp || patch -p1 < debian/patches/xmipp-aarch64-cpuid.patch
+
+	grep -q 'defined(__i386__)' src/xmipp/libraries/data/cpu.cpp || \
+		patch -p1 < debian/patches/xmipp-aarch64-cpuid.patch
+
 	cd build && cmake .. \
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCMAKE_INSTALL_LIBDIR=lib \
@@ -29,4 +32,11 @@ override_dh_auto_test:
 	:
 
 override_dh_auto_install:
-	$(MAKE) -C build install DESTDIR=$(CURDIR)/debian/xmipp
+	$(MAKE) -C build install DESTDIR=$(CURDIR)/debian/tmp
+
+	rm -rf $(CURDIR)/debian/tmp/usr/include/gtest
+	rm -rf $(CURDIR)/debian/tmp/usr/include/gmock
+	rm -f  $(CURDIR)/debian/tmp/usr/lib/libgtest*
+	rm -f  $(CURDIR)/debian/tmp/usr/lib/libgmock*
+	rm -f  $(CURDIR)/debian/tmp/usr/lib/pkgconfig/gtest*
+	rm -f  $(CURDIR)/debian/tmp/usr/lib/pkgconfig/gmock*
