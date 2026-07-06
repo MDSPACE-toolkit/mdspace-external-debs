@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/MDSPACE-toolkit/rtb2
+
+Files: *
+Copyright: upstream RTB2 authors
+License: Proprietary
+
+License: Proprietary
+ This package follows the license field declared by the RPM spec. Verify the
+ redistributability terms before publishing binary packages.

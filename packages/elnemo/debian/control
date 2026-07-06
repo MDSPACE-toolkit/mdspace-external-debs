@@ -1,0 +1,19 @@
+Source: elnemo
+Section: science
+Priority: optional
+Maintainer: Benjamin Gallois <benjamin.gallois@sorbonne-universite.fr>
+Build-Depends:
+ debhelper-compat (= 13),
+ gcc,
+ gfortran,
+ make
+Standards-Version: 4.6.2
+Homepage: https://github.com/MDSPACE-toolkit/nma
+Rules-Requires-Root: no
+
+Package: elnemo
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: ElNemo normal mode analysis tools
+ ElNemo provides normal mode analysis tools for biomolecular systems. This
+ package installs the command-line tools used by MDSPACE.

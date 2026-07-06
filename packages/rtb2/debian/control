@@ -1,0 +1,25 @@
+Source: rtb2
+Section: science
+Priority: optional
+Maintainer: Benjamin Gallois <benjamin.gallois@sorbonne-universite.fr>
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ flex,
+ g++,
+ gcc,
+ gfortran,
+ libarpack2-dev,
+ libblas-dev,
+ make,
+ perl
+Standards-Version: 4.6.2
+Homepage: https://github.com/MDSPACE-toolkit/rtb2
+Rules-Requires-Root: no
+
+Package: rtb2
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, perl
+Description: rotation-translation block normal mode analysis tools
+ RTB2 provides tools for rotation-translation block normal mode analysis.
+ This package installs the RTB2 binary and the makebloc.pl helper script.

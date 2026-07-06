@@ -1,0 +1,11 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/MDSPACE-toolkit/nma
+
+Files: *
+Copyright: upstream ElNemo/NMA authors
+License: GPL-2
+
+License: GPL-2
+ This package follows the GPL-2 license declared by the RPM spec.
+ The full license text is available on Debian systems in
+ /usr/share/common-licenses/GPL-2.

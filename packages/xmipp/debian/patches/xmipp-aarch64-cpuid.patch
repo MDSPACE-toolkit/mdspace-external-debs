@@ -1,0 +1,24 @@
+diff --git a/src/xmipp/libraries/data/cpu.cpp b/src/xmipp/libraries/data/cpu.cpp
+--- a/src/xmipp/libraries/data/cpu.cpp
++++ b/src/xmipp/libraries/data/cpu.cpp
+@@ -30,13 +30,20 @@
+ void CPU::native_cpuid(unsigned int *eax, unsigned int *ebx,
+         unsigned int *ecx, unsigned int *edx)
+ {
++#if defined(__i386__) || defined(__x86_64__)
+     /* ecx is often an input as well as an output. */
+     asm volatile("cpuid"
+     : "=a" (*eax),
+       "=b" (*ebx),
+       "=c" (*ecx),
+       "=d" (*edx)
+     : "0" (*eax), "2" (*ecx));
++#else
++    *eax = 0;
++    *ebx = 0;
++    *ecx = 0;
++    *edx = 0;
++#endif
+ }
+ 
+ void CPU::updateMemoryInfo() {

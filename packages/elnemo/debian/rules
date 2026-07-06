@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+ifeq ($(DEB_HOST_ARCH),amd64)
+SAFE_ARCH_FLAGS = -march=x86-64 -mtune=generic
+ELNEMO_ARCH_FLAGS = -m64 -mcmodel=large -fno-pie -no-pie
+else
+ELNEMO_ARCH_FLAGS = -mcmodel=large -fno-pie -no-pie
+endif
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	$(MAKE) -C ElNemo FC=gfortran FFLAGS="-O3 $(SAFE_ARCH_FLAGS) $(ELNEMO_ARCH_FLAGS)"
+
+override_dh_auto_install:
+	install -d debian/elnemo/usr/bin
+	install -m 0755 ElNemo/nma_diagrtb debian/elnemo/usr/bin/
+	install -m 0755 ElNemo/nma_check_modes debian/elnemo/usr/bin/
+	install -m 0755 ElNemo/nma_elnemo_pdbmat debian/elnemo/usr/bin/

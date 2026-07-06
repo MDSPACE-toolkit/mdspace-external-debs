@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	curl -L --fail -o Tree-DAG_Node-1.35.tgz https://www.cpan.org/authors/id/R/RS/RSAVAGE/Tree-DAG_Node-1.35.tgz
+	curl -L --fail -o XML-Validator-Schema-1.10.tar.gz https://www.cpan.org/modules/by-module/XML/XML-Validator-Schema-1.10.tar.gz
+	tar xf Tree-DAG_Node-1.35.tgz
+	tar xf XML-Validator-Schema-1.10.tar.gz
+	cd Tree-DAG_Node-1.35 && perl Makefile.PL INSTALLDIRS=vendor
+	cd XML-Validator-Schema-1.10 && perl Makefile.PL INSTALLDIRS=vendor
+	printf '#!/bin/bash\n' > configure
+	cat configure.smog2 >> configure
+	chmod +x configure
+	./configure
+	install -d bin
+	cat debian/smog2.wrapper > bin/smog2
+	cat debian/smog_adjustPDB.wrapper > bin/smog_adjustPDB
+	chmod 0755 bin/smog2 bin/smog_adjustPDB
+	for link in SBM_AA SBM_AA+gaussian SBM_calpha SBM_calpha+gaussian; do \
+		if [ -L "$$link" ]; then \
+			rm -f "$$link"; \
+			cp -a "share/templates/$$link" "$$link"; \
+		fi; \
+	done
+
+override_dh_auto_build:
+	$(MAKE) -C Tree-DAG_Node-1.35
+	$(MAKE) -C XML-Validator-Schema-1.10
+
+override_dh_auto_install:
+	install -d debian/smog2/usr/bin
+	install -m 0755 bin/smog2 debian/smog2/usr/bin/
+	install -m 0755 bin/smog_adjustPDB debian/smog2/usr/bin/
+	install -d debian/smog2/usr/share/smog2
+	install -m 0644 src/*.pm debian/smog2/usr/share/smog2/
+	install -m 0755 src/smogv2 debian/smog2/usr/share/smog2/
+	cp -r SBM* debian/smog2/usr/share/smog2/
+	install -d debian/smog2/usr/share/smog2/src/tools
+	cp -r src/tools/* debian/smog2/usr/share/smog2/src/tools/
+	install -d debian/smog2/usr/share/smog2/share
+	cp -r share/* debian/smog2/usr/share/smog2/share/
+	$(MAKE) -C Tree-DAG_Node-1.35 DESTDIR=$(CURDIR)/debian/smog2 install
+	$(MAKE) -C XML-Validator-Schema-1.10 DESTDIR=$(CURDIR)/debian/smog2 install
+	find debian/smog2 -name perllocal.pod -delete
+	find debian/smog2 -name .packlist -delete

@@ -1,0 +1,5 @@
+smog2 (2.5-5) unstable; urgency=medium
+
+  * Convert MDSPACE RPM packaging to Debian packaging.
+
+ -- Benjamin Gallois <benjamin.gallois@sorbonne-universite.fr>  Mon, 06 Jul 2026 10:00:00 +0200

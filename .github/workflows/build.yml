@@ -1,0 +1,159 @@
+name: Build DEB packages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.package }} for ${{ matrix.target }} on ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-26.04
+          - debian-12
+          - debian-13
+        package:
+          - elnemo
+          - genesis
+          - rtb2
+          - smog2
+          - xmipp
+        arch:
+          - amd64
+          - arm64
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout private RTB2 source
+        if: matrix.package == 'rtb2'
+        uses: actions/checkout@v4
+        with:
+          repository: MDSPACE-toolkit/rtb2
+          path: private-rtb2
+          ssh-key: ${{ secrets.RTB2_DEPLOY_KEY }}
+
+      - name: Prepare RTB2 source tarball
+        if: matrix.package == 'rtb2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar \
+            --exclude='.git' \
+            --transform 's,^,rtb2-1.0.0/,' \
+            -czf packages/rtb2/rtb2-1.0.0.tar.gz \
+            -C private-rtb2 .
+
+      - name: Verify runner architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.arch }}" in
+            amd64) test "$(uname -m)" = "x86_64" ;;
+            arm64) test "$(uname -m)" = "aarch64" ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Build package
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x build.sh
+          ./build.sh "${{ matrix.target }}" "${{ matrix.package }}" "out/${{ matrix.target }}/${{ matrix.package }}"
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          for deb in out/${{ matrix.target }}/${{ matrix.package }}/*.deb; do
+            case "$deb" in
+              *-dbgsym_*.deb) continue ;;
+            esac
+
+            base="$(basename "$deb" .deb)"
+            cp "$deb" "release/${base}_${{ matrix.target }}.deb"
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}-${{ matrix.target }}-${{ matrix.arch }}-debs
+          path: release/*.deb
+          retention-days: 1
+
+  release:
+    name: Publish continuous DEB assets
+    needs: build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all DEB artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Prepare continuous release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          deb_count=$(find release -name "*.deb" -type f | wc -l)
+          if [ "$deb_count" -eq 0 ]; then
+            echo "ERROR: no DEB files were downloaded" >&2
+            exit 1
+          fi
+
+          echo "Continuous release contents (${deb_count} packages):"
+          find release -name "*.deb" -exec ls -lh {} \;
+
+      - name: Move continuous tag to this commit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -f continuous "$GITHUB_SHA"
+          git push origin refs/tags/continuous --force
+
+      - name: Upload continuous release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: continuous
+          tag_name: continuous
+          files: |
+            release/**/*.deb
+          fail_on_unmatched_files: true
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete workflow artifacts
+        if: always()
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            *-debs

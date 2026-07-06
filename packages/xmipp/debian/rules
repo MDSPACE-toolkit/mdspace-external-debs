@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	./xmipp getSources
+	mkdir -p build
+	grep -q 'defined(__i386__)' src/xmipp/libraries/data/cpu.cpp || patch -p1 < debian/patches/xmipp-aarch64-cpuid.patch
+	cd build && cmake .. \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_INSTALL_INCLUDEDIR=include \
+		-DCMAKE_INSTALL_DATADIR=share \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DXMIPP_LINK_TO_SCIPION=NO \
+		-DXMIPP_USE_CUDA=OFF \
+		-DXMIPP_USE_MATLAB=OFF \
+		-DXMIPP_USE_MPI=OFF \
+		-DBUILD_TESTING=OFF \
+		-DPython3_EXECUTABLE=/usr/bin/python3 \
+		-DPython3_FIND_STRATEGY=LOCATION \
+		-DPython3_ROOT_DIR=/usr
+
+override_dh_auto_build:
+	$(MAKE) -C build -j$$(nproc)
+
+override_dh_auto_test:
+	:
+
+override_dh_auto_install:
+	$(MAKE) -C build install DESTDIR=$(CURDIR)/debian/xmipp

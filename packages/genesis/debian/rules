@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+ifeq ($(DEB_HOST_ARCH),amd64)
+SAFE_ARCH_FLAGS = -march=x86-64 -mtune=generic
+endif
+
+export CFLAGS := $(shell dpkg-buildflags --get CFLAGS) $(SAFE_ARCH_FLAGS)
+export CXXFLAGS := $(shell dpkg-buildflags --get CXXFLAGS) $(SAFE_ARCH_FLAGS)
+export FFLAGS := $(shell dpkg-buildflags --get FFLAGS) $(SAFE_ARCH_FLAGS) -fallow-argument-mismatch -ffree-line-length-none
+export FCFLAGS := $(shell dpkg-buildflags --get FCFLAGS) $(SAFE_ARCH_FLAGS) -fallow-argument-mismatch -ffree-line-length-none
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	autoreconf -fi
+	FC=mpif90 CC=mpicc CXX=mpicxx ./configure --prefix=/usr
+
+override_dh_auto_build:
+	dh_auto_build --no-parallel
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/genesis

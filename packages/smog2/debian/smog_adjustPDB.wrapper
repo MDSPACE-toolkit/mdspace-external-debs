@@ -1,0 +1,7 @@
+#!/bin/bash
+
+SMOG_PATH="/usr/share/smog2"
+export PERLLIB="$SMOG_PATH:${PERL5LIB:-}"
+export PERL5LIB="$SMOG_PATH:${PERL5LIB:-}"
+export perl4smog=/usr/bin/perl
+SMOG_PATH="$SMOG_PATH" exec /usr/bin/perl "$SMOG_PATH/src/tools/adjustPDB" "$@"

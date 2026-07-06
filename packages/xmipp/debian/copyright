@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://xmipp.cnb.csic.es/
+
+Files: *
+Copyright: upstream XMIPP authors
+License: GPL
+
+License: GPL
+ This package follows the GPL license declared by the RPM spec. Verify the
+ exact upstream license version when publishing binary packages.

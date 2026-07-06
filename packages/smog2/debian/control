@@ -1,0 +1,29 @@
+Source: smog2
+Section: science
+Priority: optional
+Maintainer: Benjamin Gallois <benjamin.gallois@sorbonne-universite.fr>
+Build-Depends:
+ debhelper-compat (= 13),
+ curl,
+ gcc,
+ gfortran,
+ make,
+ perl,
+ zlib1g-dev
+Standards-Version: 4.6.2
+Homepage: https://smog-server.org/smog2/
+Rules-Requires-Root: no
+
+Package: smog2
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${perl:Depends},
+ ${shlibs:Depends},
+ default-jre | java-runtime,
+ libxml-parser-perl,
+ libxml-sax-perl,
+ perl
+Description: SMOG2 molecular simulation toolkit
+ SMOG2 is a tool for molecular simulation and analysis. This package
+ integrates the SMOG2 toolkit into the MDSPACE environment.

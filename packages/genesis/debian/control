@@ -1,0 +1,33 @@
+Source: genesis
+Section: science
+Priority: optional
+Maintainer: Benjamin Gallois <benjamin.gallois@sorbonne-universite.fr>
+Build-Depends:
+ debhelper-compat (= 13),
+ autoconf,
+ automake,
+ gcc,
+ g++,
+ gfortran,
+ libblas-dev,
+ libfftw3-dev,
+ liblapack-dev,
+ libopenmpi-dev,
+ libtool,
+ make,
+ openmpi-bin,
+ zlib1g-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/MDSPACE-toolkit/mdspace-genesis
+Rules-Requires-Root: no
+
+Package: genesis
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ openmpi-bin
+Description: GENESIS molecular dynamics simulation engine
+ GENESIS is a high-performance molecular dynamics simulation package for
+ biomolecular systems. This build is compatible with MDSPACE and includes
+ the Fortran configuration flags used by the MDSPACE RPM package.
