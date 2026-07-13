@@ -1,0 +1,7 @@
+cryosparc-cs-reader (1.0.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * Add an offline Nuitka executable for reading CryoSPARC .cs files.
+  * Convert CryoSPARC particle metadata to an MDSPACE-compatible TSV file.
+
+ -- Benjamin Gallois <your-email@example.com>  Mon, 13 Jul 2026 09:00:00 +0200

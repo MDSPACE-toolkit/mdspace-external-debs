@@ -1,0 +1,91 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export PYBUILD_DISABLE = 1
+export PYTHONNOUSERSITE = 1
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	python3 -m venv --system-site-packages build-venv
+	build-venv/bin/python -m pip install --upgrade pip
+	build-venv/bin/python -m pip install \
+		nuitka \
+		ordered-set \
+		zstandard \
+		numpy \
+		cryosparc-tools
+
+UBUNTU_VERSION := $(shell . /etc/os-release 2>/dev/null && echo $$VERSION_ID)
+
+override_dh_auto_build:
+ifneq ($(filter $(UBUNTU_VERSION),22.04 24.04),)
+	rm -rf build-nuitka
+	env \
+		CPPFLAGS="" \
+		CFLAGS="-O2" \
+		CXXFLAGS="-O2" \
+		LDFLAGS="" \
+		build-venv/bin/python -m nuitka \
+			--standalone \
+			--deployment \
+			--lto=no \
+			--static-libpython=no \
+			--output-dir=build-nuitka \
+			--output-filename=cryosparc-cs-reader \
+			--include-package=cryosparc \
+			--include-package-data=cryosparc \
+			--include-package=numpy \
+			cs_reader.py
+else
+	build-venv/bin/python -m nuitka \
+		--standalone \
+		--deployment \
+		--static-libpython=no \
+		--output-dir=build-nuitka \
+		--output-filename=cryosparc-cs-reader \
+		--include-package=cryosparc \
+		--include-package-data=cryosparc \
+		--include-package=numpy \
+			cs_reader.py
+endif
+
+override_dh_auto_test:
+	env \
+		-u PYTHONPATH \
+		-u PYTHONHOME \
+		PYTHONNOUSERSITE=1 \
+		build-nuitka/cs_reader.dist/cryosparc-cs-reader --help
+
+override_dh_auto_install:
+	install -d \
+		debian/cryosparc-cs-reader/usr/lib/cryosparc-cs-reader \
+		debian/cryosparc-cs-reader/usr/bin
+
+	cp -a \
+		build-nuitka/cs_reader.dist/. \
+		debian/cryosparc-cs-reader/usr/lib/cryosparc-cs-reader/
+
+	ln -s \
+		../lib/cryosparc-cs-reader/cryosparc-cs-reader \
+		debian/cryosparc-cs-reader/usr/bin/cryosparc-cs-reader
+
+	test -x \
+		debian/cryosparc-cs-reader/usr/bin/cryosparc-cs-reader
+
+override_dh_dwz:
+	:
+
+override_dh_strip:
+	:
+
+override_dh_makeshlibs:
+	:
+
+override_dh_shlibdeps:
+	:
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build-nuitka build-venv

@@ -28,6 +28,7 @@ jobs:
           - rtb2
           - smog2
           - xmipp
+          - cs
         arch:
           - amd64
           - arm64
