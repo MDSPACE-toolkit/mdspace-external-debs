@@ -29,6 +29,7 @@ jobs:
           - smog2
           - xmipp
           - cs
+          - pdb_fixer
         arch:
           - amd64
           - arm64

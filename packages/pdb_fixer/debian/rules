@@ -1,0 +1,140 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export PYBUILD_DISABLE = 1
+export PYTHONNOUSERSITE = 1
+export UV_PYTHON_INSTALL_DIR = $(CURDIR)/.uv-python
+
+UBUNTU_VERSION := $(shell . /etc/os-release 2>/dev/null && echo $$VERSION_ID)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	python3 -m venv bootstrap-venv
+	bootstrap-venv/bin/python -m pip install --upgrade pip
+	bootstrap-venv/bin/python -m pip install uv
+
+	bootstrap-venv/bin/uv python install 3.11
+
+	bootstrap-venv/bin/uv venv \
+		--python 3.11 \
+		--seed \
+		build-venv
+
+	build-venv/bin/python -m pip install --upgrade pip
+	build-venv/bin/python -m pip install \
+		nuitka \
+		ordered-set \
+		zstandard \
+		numpy \
+		openmm \
+		pdbfixer-neoralab
+
+override_dh_auto_build:
+	rm -rf build-nuitka
+
+	OPENMM_PLUGIN_DIR="$$( \
+		find build-venv \
+			-type f \
+			-name 'libOpenMMCPU.so' \
+			-printf '%h\n' \
+			-quit \
+	)"; \
+	test -n "$$OPENMM_PLUGIN_DIR"; \
+	echo "OpenMM plugin directory: $$OPENMM_PLUGIN_DIR"; \
+	ls -la "$$OPENMM_PLUGIN_DIR"; \
+	if echo "22.04 24.04" | grep -qw "$(UBUNTU_VERSION)"; then \
+		env \
+			CPPFLAGS="" \
+			CFLAGS="-O2" \
+			CXXFLAGS="-O2" \
+			LDFLAGS="" \
+			build-venv/bin/python -m nuitka \
+				--standalone \
+				--deployment \
+				--lto=no \
+				--static-libpython=no \
+				--output-dir=build-nuitka \
+				--output-filename=pdb-fixer \
+				--include-package=numpy \
+				--include-package=openmm \
+				--include-package-data=openmm \
+				--include-package=pdbfixer \
+				--include-package-data=pdbfixer \
+				pdb_fixer.py; \
+	else \
+		build-venv/bin/python -m nuitka \
+			--standalone \
+			--deployment \
+			--static-libpython=no \
+			--output-dir=build-nuitka \
+			--output-filename=pdb-fixer \
+			--include-package=numpy \
+			--include-package=openmm \
+			--include-package-data=openmm \
+			--include-package=pdbfixer \
+			--include-package-data=pdbfixer \
+			pdb_fixer.py; \
+	fi; \
+	install -d \
+		build-nuitka/pdb_fixer.dist/openmm_plugins; \
+	cp -a \
+		"$$OPENMM_PLUGIN_DIR"/. \
+		build-nuitka/pdb_fixer.dist/openmm_plugins/
+
+	test -f \
+		build-nuitka/pdb_fixer.dist/openmm_plugins/libOpenMMCPU.so
+
+	ldd \
+		build-nuitka/pdb_fixer.dist/openmm_plugins/libOpenMMCPU.so
+
+override_dh_auto_test:
+	env \
+		-u PYTHONPATH \
+		-u PYTHONHOME \
+		OPENMM_PLUGIN_DIR="$$(pwd)/build-nuitka/pdb_fixer.dist/openmm_plugins" \
+		PYTHONNOUSERSITE=1 \
+		build-nuitka/pdb_fixer.dist/pdb-fixer --help
+
+	test -f \
+		build-nuitka/pdb_fixer.dist/openmm_plugins/libOpenMMCPU.so
+
+override_dh_auto_install:
+	install -d \
+		debian/pdb-fixer/usr/lib/pdb-fixer \
+		debian/pdb-fixer/usr/bin
+
+	cp -a \
+		build-nuitka/pdb_fixer.dist/. \
+		debian/pdb-fixer/usr/lib/pdb-fixer/
+
+	ln -s \
+		../lib/pdb-fixer/pdb-fixer \
+		debian/pdb-fixer/usr/bin/pdb-fixer
+
+	test -x \
+		debian/pdb-fixer/usr/bin/pdb-fixer
+
+	test -f \
+		debian/pdb-fixer/usr/lib/pdb-fixer/openmm_plugins/libOpenMMCPU.so
+
+override_dh_dwz:
+	:
+
+override_dh_strip:
+	:
+
+override_dh_makeshlibs:
+	:
+
+override_dh_shlibdeps:
+	:
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf \
+		build-nuitka \
+		build-venv \
+		bootstrap-venv \
+		.uv-python
