@@ -4,11 +4,11 @@
 	dh $@
 
 override_dh_auto_configure:
-	curl -L --fail -o Tree-DAG_Node-1.35.tgz https://www.cpan.org/authors/id/R/RS/RSAVAGE/Tree-DAG_Node-1.35.tgz
+	curl -L --fail -o Tree-DAG_Node-1.39.tgz https://www.cpan.org/authors/id/R/RS/RSAVAGE/Tree-DAG_Node-1.39.tgz
 	curl -L --fail -o XML-Validator-Schema-1.10.tar.gz https://www.cpan.org/modules/by-module/XML/XML-Validator-Schema-1.10.tar.gz
-	tar xf Tree-DAG_Node-1.35.tgz
+	tar xf Tree-DAG_Node-1.39.tgz
 	tar xf XML-Validator-Schema-1.10.tar.gz
-	cd Tree-DAG_Node-1.35 && perl Makefile.PL INSTALLDIRS=vendor
+	cd Tree-DAG_Node-1.39 && perl Makefile.PL INSTALLDIRS=vendor
 	cd XML-Validator-Schema-1.10 && perl Makefile.PL INSTALLDIRS=vendor
 	printf '#!/bin/bash\n' > configure
 	cat configure.smog2 >> configure
@@ -26,7 +26,7 @@ override_dh_auto_configure:
 	done
 
 override_dh_auto_build:
-	$(MAKE) -C Tree-DAG_Node-1.35
+	$(MAKE) -C Tree-DAG_Node-1.39
 	$(MAKE) -C XML-Validator-Schema-1.10
 
 override_dh_auto_install:
@@ -41,7 +41,7 @@ override_dh_auto_install:
 	cp -r src/tools/* debian/smog2/usr/share/smog2/src/tools/
 	install -d debian/smog2/usr/share/smog2/share
 	cp -r share/* debian/smog2/usr/share/smog2/share/
-	$(MAKE) -C Tree-DAG_Node-1.35 DESTDIR=$(CURDIR)/debian/smog2 install
+	$(MAKE) -C Tree-DAG_Node-1.39 DESTDIR=$(CURDIR)/debian/smog2 install
 	$(MAKE) -C XML-Validator-Schema-1.10 DESTDIR=$(CURDIR)/debian/smog2 install
 	find debian/smog2 -name perllocal.pod -delete
 	find debian/smog2 -name .packlist -delete
